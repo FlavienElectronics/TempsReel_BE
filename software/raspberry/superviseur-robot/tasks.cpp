@@ -26,7 +26,6 @@
 #define PRIORITY_TRECEIVEFROMMON 25
 #define PRIORITY_TSTARTROBOT 20
 #define PRIORITY_TCAMERA 21
-#define PRIORITY_TBATTERY 19
 
 /*
  * Some remarks:
@@ -128,6 +127,10 @@ void Tasks::Init() {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
+    if (err = rt_task_create(&th_camera, "th_move", 0, PRIORITY_TCAMERA, 0)) {
+        cerr << "Error task create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
     cout << "Tasks created successfully" << endl << flush;
 
     /**************************************************************************************/
@@ -172,6 +175,10 @@ void Tasks::Run() {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
+    if (err = rt_task_start(&th_camera, (void(*)(void*)) & Tasks::CameraTask, this)) {
+        cerr << "Error task start: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
 
     cout << "Tasks launched" << endl << flush;
 }
@@ -190,6 +197,17 @@ void Tasks::Join() {
     cout << "Tasks synchronized" << endl << flush;
     rt_sem_broadcast(&sem_barrier);
     pause();
+}
+
+
+void Tasks::CameraTask(void *arg) {
+    Camera * cam;
+    cam = new Camera(sm, 10);
+    Img * img = new Img(cam->Grab());
+    MessageImg * msgImg = new MessageImg(MESSAGE_CAM_IMAGE, img);
+    rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+    monitor.Write(MessageImg); // The message is deleted with the Write
+    rt_mutex_release(&mutex_monitor);
 }
 
 /**

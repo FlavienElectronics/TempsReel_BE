@@ -76,7 +76,7 @@ private:
     RT_TASK th_openComRobot;
     RT_TASK th_startRobot;
     RT_TASK th_move;
-    RT_TASK th_battery;
+    RT_TASK th_camera;
     
     /**********************************************************************/
     /* Mutex                                                              */
@@ -105,7 +105,7 @@ private:
     /* Tasks' functions                                                   */
     /**********************************************************************/
     
-    void SendBatteryTask(void *arg);
+    void CameraTask(void *arg);
     
     /**
      * @brief Thread handling server communication with the monitor.
