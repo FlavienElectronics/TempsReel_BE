@@ -40,8 +40,6 @@ int main(int argc, char **argv) {
     tasks.Run();
     tasks.Join();
     
-    RT_TASK task_test;
-    
     tasks.Stop();
     
     return 0;

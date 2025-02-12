@@ -104,6 +104,9 @@ private:
     /**********************************************************************/
     /* Tasks' functions                                                   */
     /**********************************************************************/
+    
+    void SendBatteryTask(void *arg);
+    
     /**
      * @brief Thread handling server communication with the monitor.
      */
