@@ -66,7 +66,8 @@ private:
     ComRobot robot;
     int robotStarted = 0;
     int move = MESSAGE_ROBOT_STOP;
-    int openCamera = 0;
+    
+    int CameraActivated = 0;
     
     /**********************************************************************/
     /* Tasks                                                              */
@@ -87,6 +88,7 @@ private:
     RT_MUTEX mutex_robotStarted;
     RT_MUTEX mutex_move;
     RT_MUTEX mutex_battery;
+    RT_MUTEX mutex_getCameraEtat;
 
     /**********************************************************************/
     /* Semaphores                                                         */

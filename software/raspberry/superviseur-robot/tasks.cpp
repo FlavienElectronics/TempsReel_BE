@@ -200,17 +200,36 @@ void Tasks::Join() {
 }
 
 void Tasks::CameraTask(void *arg) {
+    cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
+    
     Img * image;
     Camera * cam;
     cam = new Camera(sm,10);
-    
-    while(1){
-        cam->Open();
         
-        image = new Img(cam->Grab());
-        rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-        monitor.Write(new MessageImg(MESSAGE_CAM_IMAGE, image));
-        rt_mutex_release(&mutex_monitor);
+    while(1){
+        int tmp_cam = 0;
+        cout << "MUTEX avant" << endl << flush;
+        rt_mutex_acquire(&mutex_getCameraEtat, TM_INFINITE);
+        cout << "CAMERA ACQ" << endl << flush;
+        tmp_cam = CameraActivated;
+        rt_mutex_release(&mutex_getCameraEtat);
+        
+        if (tmp_cam == 1){
+            if (cam->IsOpen() == false){
+                cam->Open();
+                cout << "CAMERA OUVETE" << endl << flush;
+            }
+            image = new Img(cam->Grab());
+            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+            monitor.Write(new MessageImg(MESSAGE_CAM_IMAGE, image));
+            rt_mutex_release(&mutex_monitor);
+            //delete image;
+        }else{
+            if (cam->IsOpen() == true){
+                cam->Close();
+                cout << "CAMERA FERMEE" << endl << flush;
+            }
+        }
     }
 }
 
@@ -308,6 +327,14 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             msg = (MessageBattery*)robot.Write(new Message(MESSAGE_ROBOT_BATTERY_GET));
             monitor.Write(msg);
             rt_mutex_release(&mutex_robot);
+        } else if (msgRcv->CompareID(MESSAGE_CAM_OPEN)){
+            rt_mutex_acquire(&mutex_getCameraEtat, TM_INFINITE);
+            CameraActivated = 1;
+            rt_mutex_release(&mutex_getCameraEtat);
+        } else if (msgRcv->CompareID(MESSAGE_CAM_CLOSE)){
+            rt_mutex_acquire(&mutex_getCameraEtat, TM_INFINITE);
+            CameraActivated = 0;
+            rt_mutex_release(&mutex_getCameraEtat);
         }
         delete(msgRcv); // mus be deleted manually, no consumer
     }
