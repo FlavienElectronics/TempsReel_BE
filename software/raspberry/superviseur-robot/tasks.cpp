@@ -127,7 +127,7 @@ void Tasks::Init() {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_create(&th_camera, "th_move", 0, PRIORITY_TCAMERA, 0)) {
+    if (err = rt_task_create(&th_camera, "th_camera", 0, PRIORITY_TCAMERA, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -199,15 +199,19 @@ void Tasks::Join() {
     pause();
 }
 
-
 void Tasks::CameraTask(void *arg) {
+    Img * image;
     Camera * cam;
-    cam = new Camera(sm, 10);
-    Img * img = new Img(cam->Grab());
-    MessageImg * msgImg = new MessageImg(MESSAGE_CAM_IMAGE, img);
-    rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-    monitor.Write(MessageImg); // The message is deleted with the Write
-    rt_mutex_release(&mutex_monitor);
+    cam = new Camera(sm,10);
+    
+    while(1){
+        cam->Open();
+        
+        image = new Img(cam->Grab());
+        rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+        monitor.Write(new MessageImg(MESSAGE_CAM_IMAGE, image));
+        rt_mutex_release(&mutex_monitor);
+    }
 }
 
 /**
