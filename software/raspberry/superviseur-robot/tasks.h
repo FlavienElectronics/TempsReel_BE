@@ -36,7 +36,8 @@
 
 using namespace std;
 
-class Tasks {
+class Tasks
+{
 public:
     /**
      * @brief Initializes main structures (semaphores, tasks, mutex, etc.)
@@ -52,12 +53,12 @@ public:
      * @brief Stops tasks
      */
     void Stop();
-    
+
     /**
      * @brief Suspends main thread
      */
     void Join();
-    
+
 private:
     /**********************************************************************/
     /* Shared data                                                        */
@@ -66,13 +67,13 @@ private:
     ComRobot robot;
     int robotStarted = 0;
     int move = MESSAGE_ROBOT_STOP;
-    
+
     int CameraActivated = 0;
     int DemandeRechercheArene = 0;
     int AttenteConfirmationArene = 0;
     int ConfirmationArene = -1;
     int CalculPosition = 0;
-    
+
     /**********************************************************************/
     /* Tasks                                                              */
     /**********************************************************************/
@@ -83,7 +84,7 @@ private:
     RT_TASK th_startRobot;
     RT_TASK th_move;
     RT_TASK th_camera;
-    
+
     /**********************************************************************/
     /* Mutex                                                              */
     /**********************************************************************/
@@ -111,28 +112,28 @@ private:
     /**********************************************************************/
     int MSG_QUEUE_SIZE;
     RT_QUEUE q_messageToMon;
-    
+
     /**********************************************************************/
     /* Tasks' functions                                                   */
     /**********************************************************************/
-    
+
     void CameraTask(void *arg);
-    
+
     /**
      * @brief Thread handling server communication with the monitor.
      */
     void ServerTask(void *arg);
-     
+
     /**
      * @brief Thread sending data to monitor.
      */
     void SendToMonTask(void *arg);
-        
+
     /**
      * @brief Thread receiving data from monitor.
      */
     void ReceiveFromMonTask(void *arg);
-    
+
     /**
      * @brief Thread opening communication with the robot.
      */
@@ -142,12 +143,12 @@ private:
      * @brief Thread starting the communication with the robot.
      */
     void StartRobotTask(void *arg);
-    
+
     /**
      * @brief Thread handling control of the robot.
      */
     void MoveTask(void *arg);
-    
+
     /**********************************************************************/
     /* Queue services                                                     */
     /**********************************************************************/
@@ -157,15 +158,13 @@ private:
      * @param msg Message to be stored
      */
     void WriteInQueue(RT_QUEUE *queue, Message *msg);
-    
+
     /**
      * Read a message from a given queue, block if empty
      * @param queue Queue identifier
      * @return Message read
      */
     Message *ReadInQueue(RT_QUEUE *queue);
-
 };
 
-#endif // __TASKS_H__ 
-
+#endif // __TASKS_H__

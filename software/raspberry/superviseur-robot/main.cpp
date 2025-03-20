@@ -26,22 +26,22 @@
 #include "tasks.h"
 #endif // __WITH_PTHREAD__
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     Tasks tasks;
-    
-    //Lock the memory to avoid memory swapping for this program
+
+    // Lock the memory to avoid memory swapping for this program
     mlockall(MCL_CURRENT | MCL_FUTURE);
 
-    cout<<"#################################"<<endl;
-    cout<<"#      DE  PROJECT  X           #"<<endl;
-    cout<<"#################################"<<endl;
-    
+    cout << "######################################################" << endl;
+    cout << "#    PROJECT   OVERCHARGED   LESPIAUCQ X CARVALHO    #" << endl;
+    cout << "######################################################" << endl;
+
     tasks.Init();
     tasks.Run();
     tasks.Join();
-    
+
     tasks.Stop();
-    
+
     return 0;
 }
-

@@ -27,11 +27,17 @@
 /**
  * Enumerate for picture size
  */
-enum captureSize {xs, sm, md, lg};
+enum captureSize
+{
+    xs,
+    sm,
+    md,
+    lg
+};
 
 /**
  * Class for camera (image grab)
- * 
+ *
  * @brief Class for camera (image grab)
  * How to grab an image and send it to the monitor:
  *  1. Grab an image, for example:
@@ -39,10 +45,11 @@ enum captureSize {xs, sm, md, lg};
  *  2. Instanciate the message to send the image:
  *          MessageImg *msgImg = new MessageImg(MESSAGE_CAM_IMAGE, img);
  */
-class Camera {
+class Camera
+{
 public:
     Camera();
-    
+
     /**
      * Create an object for accessing camera
      * @param size Size of picture to grab (@see captureSize)
@@ -55,18 +62,18 @@ public:
      * @return True if camera is open, false otherwise
      */
     bool Open();
-    
+
     /**
      * Close and release camera
      */
     void Close();
-    
+
     /**
      * Get width of sampled image
      * @return Width of sampled picture
      */
     int GetWidth() const;
-    
+
     /**
      * Get height of sampled image
      * @return height of sampled picture
@@ -78,13 +85,13 @@ public:
      * @return fps of sampled picture
      */
     int GetFPS() const;
-    
+
     /**
      * Get opening status for camera
      * @return true if camera is open, false otherwise
      */
     bool IsOpen();
-    
+
     /**
      * Define size for sampled picture
      * @param size Size of picture (@see captureSize)
@@ -96,28 +103,28 @@ public:
      * @return Image taken from camera
      */
     Img Grab();
-    
+
 private:
     /**
      * Camera descriptor
      */
-    cv::VideoCapture cap; 
-   
+    cv::VideoCapture cap;
+
     /**
      * Size for image (default= small)
      */
     int size = sm;
-    
+
     /**
      * Width of image
      */
     int width;
-    
+
     /**
      * Height of image
      */
     int height;
-    
+
     /**
      * fps of image
      */
