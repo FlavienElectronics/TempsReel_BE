@@ -65,6 +65,10 @@ private:
     /**********************************************************************/
     ComMonitor monitor;
     ComRobot robot;
+    
+    Img *image;
+    Arena *arena;
+
     int robotStarted = 0;
     int move = MESSAGE_ROBOT_STOP;
 
@@ -84,6 +88,7 @@ private:
     RT_TASK th_startRobot;
     RT_TASK th_move;
     RT_TASK th_camera;
+    RT_TASK th_position;
 
     /**********************************************************************/
     /* Mutex                                                              */
@@ -118,6 +123,8 @@ private:
     /**********************************************************************/
 
     void CameraTask(void *arg);
+
+    void PositionTask(void *arg);
 
     /**
      * @brief Thread handling server communication with the monitor.

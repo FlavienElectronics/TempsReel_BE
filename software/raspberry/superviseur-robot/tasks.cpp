@@ -26,6 +26,7 @@
 #define PRIORITY_TRECEIVEFROMMON 25
 #define PRIORITY_TSTARTROBOT 20
 #define PRIORITY_TCAMERA 24
+#define PRIORITY_TPOSITION 24
 
 /*
  * Some remarks:
@@ -196,6 +197,12 @@ void Tasks::Init()
              << flush;
         exit(EXIT_FAILURE);
     }
+    if (err = rt_task_create(&th_position, "th_camera", 0, PRIORITY_TPOSITION, 0))
+    {
+        cerr << "Error task create: " << strerror(-err) << endl
+             << flush;
+        exit(EXIT_FAILURE);
+    }
     cout << "Tasks created successfully" << endl
          << flush;
 
@@ -286,16 +293,37 @@ void Tasks::Join()
     pause();
 }
 
+void Tasks::PositionTask(void * arg)
+{
+    cout << "Start " << __PRETTY_FUNCTION__ << endl
+         << flush;
+
+    rt_mutex_acquire(&mutex_calculPosition, TM_INFINITE);
+    int tmp_calculposition = CalculPosition;
+    rt_mutex_release(&mutex_calculPosition);
+
+
+    while(1)
+    {
+        cout << "while PositionTask" << endl
+        << flush; 
+
+        rt_mutex_acquire(&mutex_calculPosition, TM_INFINITE);
+        tmp_calculposition = CalculPosition;
+        rt_mutex_release(&mutex_calculPosition);
+        
+        // Protection de l'accès à image et arena peut-être ?
+        std::list<Postion> positionRobot image->SearchRobot(*arena); // a envoyer dans une queue peut-être ?
+    }     
+}
+
 void Tasks::CameraTask(void *arg)
 {
     cout << "Start " << __PRETTY_FUNCTION__ << endl
          << flush;
 
-    Img *image;
     Camera *cam;
     cam = new Camera(sm, 10);
-
-    Arena *arena;
 
     rt_mutex_acquire(&mutex_getCameraEtat, TM_INFINITE);
     int tmp_cam = CameraActivated;
@@ -313,12 +341,10 @@ void Tasks::CameraTask(void *arg)
     int tmp_confirmationarene = ConfirmationArene;
     rt_mutex_release(&mutex_confirmationArene);
 
-    rt_mutex_acquire(&mutex_calculPosition, TM_INFINITE);
-    int tmp_calculposition = CalculPosition;
-    rt_mutex_release(&mutex_calculPosition);
-
     while (1)
     {
+        cout << "while CameraTask" << endl
+        << flush; 
 
         rt_mutex_acquire(&mutex_getCameraEtat, TM_INFINITE);
         tmp_cam = CameraActivated;
@@ -335,10 +361,6 @@ void Tasks::CameraTask(void *arg)
         rt_mutex_acquire(&mutex_confirmationArene, TM_INFINITE);
         tmp_confirmationarene = ConfirmationArene;
         rt_mutex_release(&mutex_confirmationArene);
-
-        rt_mutex_acquire(&mutex_calculPosition, TM_INFINITE);
-        tmp_calculposition = CalculPosition;
-        rt_mutex_release(&mutex_calculPosition);
 
         if (tmp_attenteconfirmationarene == 1)
         {
@@ -407,7 +429,7 @@ void Tasks::CameraTask(void *arg)
             if (cam->IsOpen() == false)
             {
                 cam->Open();
-                cout << "CAMERA OUVETE" << endl
+                cout << "CAMERA OUVERTE" << endl
                      << flush;
             }
             image = new Img(cam->Grab());
@@ -431,7 +453,7 @@ void Tasks::CameraTask(void *arg)
             // CALCULER LA POSITION !!
         }
 
-        usleep(100);
+        usleep(100); // Pourquoi crash sans délais ?
     }
     delete cam;
 }
