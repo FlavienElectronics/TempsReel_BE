@@ -25,7 +25,7 @@
 #define PRIORITY_TSENDTOMON 22
 #define PRIORITY_TRECEIVEFROMMON 25
 #define PRIORITY_TSTARTROBOT 20
-#define PRIORITY_TCAMERA 21
+#define PRIORITY_TCAMERA 1
 
 /*
  * Some remarks:
@@ -74,6 +74,10 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     if (err = rt_mutex_create(&mutex_battery, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_mutex_create(&mutex_getCameraEtat, NULL)) {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -205,12 +209,14 @@ void Tasks::CameraTask(void *arg) {
     Img * image;
     Camera * cam;
     cam = new Camera(sm,10);
-        
+    rt_mutex_acquire(&mutex_getCameraEtat, TM_INFINITE);
+    int tmp_cam = CameraActivated;
+    rt_mutex_release(&mutex_getCameraEtat);
+
     while(1){
-        int tmp_cam = 0;
-        cout << "MUTEX avant" << endl << flush;
+        //cout << "MUTEX avant" << endl << flush;
         rt_mutex_acquire(&mutex_getCameraEtat, TM_INFINITE);
-        cout << "CAMERA ACQ" << endl << flush;
+        //cout << "CAMERA ACQ" << endl << flush;
         tmp_cam = CameraActivated;
         rt_mutex_release(&mutex_getCameraEtat);
         
@@ -230,7 +236,9 @@ void Tasks::CameraTask(void *arg) {
                 cout << "CAMERA FERMEE" << endl << flush;
             }
         }
+        usleep(100000);
     }
+    delete cam;
 }
 
 /**
