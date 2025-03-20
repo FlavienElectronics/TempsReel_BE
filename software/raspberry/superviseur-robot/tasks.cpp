@@ -93,6 +93,10 @@ void Tasks::Init() {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
+    if (err = rt_mutex_create(&mutex_calculPosition, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
     cout << "Mutexes created successfully" << endl << flush;
 
     /**************************************************************************************/
@@ -239,6 +243,10 @@ void Tasks::CameraTask(void *arg) {
     rt_mutex_acquire(&mutex_confirmationArene, TM_INFINITE);
     int tmp_confirmationarene = ConfirmationArene;
     rt_mutex_release(&mutex_confirmationArene);
+    
+    rt_mutex_acquire(&mutex_calculPosition, TM_INFINITE);
+    int tmp_calculposition = CalculPosition;
+    rt_mutex_release(&mutex_calculPosition);
 
     while(1){
 
@@ -258,13 +266,28 @@ void Tasks::CameraTask(void *arg) {
         tmp_confirmationarene = ConfirmationArene;
         rt_mutex_release(&mutex_confirmationArene);
         
+        rt_mutex_acquire(&mutex_calculPosition, TM_INFINITE);
+        tmp_calculposition = CalculPosition;
+        rt_mutex_release(&mutex_calculPosition);
+        
         if (tmp_attenteconfirmationarene == 1){
+            
+            // ATTENTION : Penser à remettre ConfirmationArene à -1 à la fin !!!
+            
             if (tmp_confirmationarene == 1){
+                
                 // ok
-                tmp_attenteconfirmationarene = 0;
+                
+                rt_mutex_acquire(&mutex_attenteConfirmationArene, TM_INFINITE);
+                AttenteConfirmationArene = 0;
+                rt_mutex_release(&mutex_attenteConfirmationArene);
             } else if (tmp_confirmationarene == 0){
+                
                 // nok
-                tmp_attenteconfirmationarene = 0;
+                
+                rt_mutex_acquire(&mutex_attenteConfirmationArene, TM_INFINITE);
+                AttenteConfirmationArene = 0;
+                rt_mutex_release(&mutex_attenteConfirmationArene);
             }
         }
         
@@ -313,6 +336,11 @@ void Tasks::CameraTask(void *arg) {
                 cout << "CAMERA FERMEE" << endl << flush;
             }
         }
+        
+        if (tmp_calculposition == 1){
+            // CALCULER LA POSITION !!
+        }
+        
         usleep(100);
     }
     delete cam;

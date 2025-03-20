@@ -71,6 +71,7 @@ private:
     int DemandeRechercheArene = 0;
     int AttenteConfirmationArene = 0;
     int ConfirmationArene = -1;
+    int CalculPosition = 0;
     
     /**********************************************************************/
     /* Tasks                                                              */
@@ -95,6 +96,7 @@ private:
     RT_MUTEX mutex_demandeRechercheArene;
     RT_MUTEX mutex_attenteConfirmationArene;
     RT_MUTEX mutex_confirmationArene;
+    RT_MUTEX mutex_calculPosition;
 
     /**********************************************************************/
     /* Semaphores                                                         */
