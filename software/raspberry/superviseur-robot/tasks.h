@@ -68,6 +68,9 @@ private:
     int move = MESSAGE_ROBOT_STOP;
     
     int CameraActivated = 0;
+    int DemandeRechercheArene = 0;
+    int AttenteConfirmationArene = 0;
+    int ConfirmationArene = -1;
     
     /**********************************************************************/
     /* Tasks                                                              */
@@ -89,6 +92,9 @@ private:
     RT_MUTEX mutex_move;
     RT_MUTEX mutex_battery;
     RT_MUTEX mutex_getCameraEtat;
+    RT_MUTEX mutex_demandeRechercheArene;
+    RT_MUTEX mutex_attenteConfirmationArene;
+    RT_MUTEX mutex_confirmationArene;
 
     /**********************************************************************/
     /* Semaphores                                                         */
