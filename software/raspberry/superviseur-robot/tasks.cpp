@@ -366,7 +366,11 @@ void Tasks::CameraTask(void *arg)
     {
         cout << "camera coucou" << endl
              << flush;
-        MessageImg *msgSend;
+
+        Message *msgSend_INFORMATION;
+        MessageImg *msgSend_IMG;
+        MessagePosition *msgSend_POSITION;
+
         rt_task_wait_period(NULL);
 
         if (cam.IsOpen())
@@ -397,6 +401,7 @@ void Tasks::CameraTask(void *arg)
                 rt_mutex_release(&mutex_RechercheRobot);
 
                 
+                /*                              A VÉRIFIER                  */
                 if (LOCALRechercheRobot == 1)
                 {
                     cout << "recherche robot en cours" << endl
@@ -413,11 +418,22 @@ void Tasks::CameraTask(void *arg)
                         positionRobot.center = cv::Point2f(-1.0,-1.0); // Position erreur
                         img->DrawRobot(positionRobot);
                     }
-                    cout << "Envoi de la position" << position->ToString() << endl
+                    cout << "Envoi de la position : " << position->ToString() << endl
                     << flush;
+
+                    
+
+                    msgSend_POSITION = new MessagePosition(MESSAGE_CAM_POSITION, positionRobot);
+                    rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+                    WriteInQueue(&q_messageToMon, msgSend_POSITION);
+                    rt_mutex_release(&mutex_monitor);
+
+                    //version nulle
+                    /*
                     rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
                     msgSend = monitor.Write(new Message(MESSAGE_CAM_POSITION, positionRobot));
                     rt_mutex_release(&mutex_monitor);
+                    */
                 }
 
 
@@ -435,9 +451,15 @@ void Tasks::CameraTask(void *arg)
                     {
                         cout << "Aucune arène trouvée" << endl
                         << flush;
+
+                        msgSend_INFORMATION = new Message(MESSAGE_ANSWER_NACK);
                         rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-                        monitor.Write(new Message(MESSAGE_ANSWER_NACK, msgSend));
+                        WriteInQueue(&q_messageToMon, msgSend_INFORMATION);
                         rt_mutex_release(&mutex_monitor);
+
+                        /*rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+                        monitor.Write(new Message(MESSAGE_ANSWER_NACK, msgSend));
+                        rt_mutex_release(&mutex_monitor);*/
                     }
                 }
                 else if (LOCALConfirmationArene == 1)
@@ -450,9 +472,9 @@ void Tasks::CameraTask(void *arg)
                     img->DrawArena(arene);
                 }
 
-                msgSend = new MessageImg(MESSAGE_CAM_IMAGE, img);
+                msgSend_IMG = new MessageImg(MESSAGE_CAM_IMAGE, img);
                 rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-                WriteInQueue(&q_messageToMon, msgSend);
+                WriteInQueue(&q_messageToMon, msgSend_IMG);
                 rt_mutex_release(&mutex_monitor);
 
                 delete img;
