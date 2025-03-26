@@ -28,6 +28,7 @@
 #define PRIORITY_TCAMERA 19
 
 Camera cam;
+Arena arene;
 
 
 /*
@@ -205,42 +206,49 @@ void Tasks::Join() {
 
 void Tasks::CameraTask(void *arg) {
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
-    // Synchronization barrier (waiting that all tasks are starting)
     rt_sem_p(&sem_barrier, TM_INFINITE);
    
-    /**************************************************************************************/
-    /* The task starts here                                                               */
-    /**************************************************************************************/
     rt_task_set_periodic(NULL, TM_NOW, 100000000);
 
-    while (1) {
-        //Img * img;
+    while (1) 
+    {
         MessageImg * msgSend;
         rt_task_wait_period(NULL);
-        if (cam.IsOpen()){
-            cout << "Periodic Camera update"<< endl;
-         
-            //Creating the message
-           
+        
+        if (cam.IsOpen())
+        {
+            cout << "Periodic Camera update"<< endl; 
+
             Img * img = new Img(cam.Grab());
-           
-            cout << img->img.size << endl;
-            //img = new Img(came.Grab().Resize());
+            //cout << img->img.size << endl;
             if (img->img.empty()){
                 cout << "Frame vide "<< endl;
             }else{
-            
+
+            rt_mutex_acquire(&mutex_detectionArene, TM_INFINITE);
+            int LOCALdetectionarene = DetectionArene;
+            rt_mutex_release(&mutex_detectionArene);
+
+            if (LOCALdetectionarene == 1)
+            {
+                arene = Arena(img->SearchArena());
+                if(arene.IsEmpty() == false)
+                {
+                    cout << "camera pas vide" << endl <<flush;
+                    img->DrawArena(arene);
+                }
+            } 
+
             msgSend = new MessageImg(MESSAGE_CAM_IMAGE,img);
 
             rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
             WriteInQueue(&q_messageToMon, msgSend);
             rt_mutex_release(&mutex_monitor);
+            
+            delete img;
+            
             }
-        }
-        else{
-            cout << "Camera not Opened" << endl << flush ;
-           
-        }
+        }   
  
     }
         cout << endl << flush;
@@ -349,9 +357,9 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             cam.Close();
             
         } else if (msgRcv->CompareID(MESSAGE_CAM_ASK_ARENA)){
-            /*rt_mutex_acquire(&mutex_demandeRechercheArene, TM_INFINITE);
-            DemandeRechercheArene = 0;
-            rt_mutex_release(&mutex_demandeRechercheArene);*/
+            rt_mutex_acquire(&mutex_detectionArene, TM_INFINITE);
+            DetectionArene = 1;
+            rt_mutex_release(&mutex_detectionArene);
         } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_CONFIRM)){
             /*rt_mutex_acquire(&mutex_confirmationArene, TM_INFINITE);
             ConfirmationArene = 1;
