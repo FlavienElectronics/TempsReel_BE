@@ -254,10 +254,7 @@ void Tasks::CameraTask(void *arg) {
                 if(arene.IsEmpty() == false)
                 {
                     cout << "camera pas vide" << endl <<flush;
-                    img->DrawArena(arene);
-                    attente_de_confirmation = 1; // on fige l'image actuelle   
-                   
-                    delete img;
+                    img->DrawArena(arene);  
                     
                 }
             }
@@ -267,15 +264,12 @@ void Tasks::CameraTask(void *arg) {
                 img->DrawArena(arene);
             }
 
-            if (attente_de_confirmation == 0)
-            {
-                msgSend = new MessageImg(MESSAGE_CAM_IMAGE,img);
-                rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-                WriteInQueue(&q_messageToMon, msgSend);
-                rt_mutex_release(&mutex_monitor);
-                
-                delete img;
-            }
+            msgSend = new MessageImg(MESSAGE_CAM_IMAGE,img);
+            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+            WriteInQueue(&q_messageToMon, msgSend);
+            rt_mutex_release(&mutex_monitor);
+
+            delete img;
             
             }
         }   
