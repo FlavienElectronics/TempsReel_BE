@@ -81,6 +81,14 @@ void Tasks::Init() {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
+    if (err = rt_mutex_create(&mutex_detectionArene, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_mutex_create(&mutex_ConfirmationArene, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
 
     cout << "Mutexes created successfully" << endl << flush;
 
@@ -209,9 +217,12 @@ void Tasks::CameraTask(void *arg) {
     rt_sem_p(&sem_barrier, TM_INFINITE);
    
     rt_task_set_periodic(NULL, TM_NOW, 100000000);
+    
+    Img * img;
 
     while (1) 
     {
+        cout << "camera coucou" << endl <<flush;
         MessageImg * msgSend;
         rt_task_wait_period(NULL);
         
@@ -219,33 +230,52 @@ void Tasks::CameraTask(void *arg) {
         {
             cout << "Periodic Camera update"<< endl; 
 
-            Img * img = new Img(cam.Grab());
+            img = new Img(cam.Grab());
+            
             //cout << img->img.size << endl;
             if (img->img.empty()){
-                cout << "Frame vide "<< endl;
+                cout << "Image vide "<< endl;
             }else{
 
             rt_mutex_acquire(&mutex_detectionArene, TM_INFINITE);
-            int LOCALdetectionarene = DetectionArene;
+            int LOCALdetectionarene = DetectionArene;       // vrai lorsqu'on demande la detection de l'arene
+            DetectionArene = 0;
             rt_mutex_release(&mutex_detectionArene);
+            
+            
+            rt_mutex_acquire(&mutex_ConfirmationArene, TM_INFINITE);
+            int LOCALConfirmationArene = ConfirmationArene; // vrai lorsqu'on confirme l'arene
+            rt_mutex_release(&mutex_ConfirmationArene);
+            
 
-            if (LOCALdetectionarene == 1)
+            if (LOCALdetectionarene == 1 && LOCALConfirmationArene == 0)
             {
                 arene = Arena(img->SearchArena());
                 if(arene.IsEmpty() == false)
                 {
                     cout << "camera pas vide" << endl <<flush;
                     img->DrawArena(arene);
+                    attente_de_confirmation = 1; // on fige l'image actuelle   
+                   
+                    delete img;
+                    
                 }
-            } 
+            }
+            else if (LOCALConfirmationArene == 1)
+            {
+                attente_de_confirmation = 0;
+                img->DrawArena(arene);
+            }
 
-            msgSend = new MessageImg(MESSAGE_CAM_IMAGE,img);
-
-            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-            WriteInQueue(&q_messageToMon, msgSend);
-            rt_mutex_release(&mutex_monitor);
-            
-            delete img;
+            if (attente_de_confirmation == 0)
+            {
+                msgSend = new MessageImg(MESSAGE_CAM_IMAGE,img);
+                rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+                WriteInQueue(&q_messageToMon, msgSend);
+                rt_mutex_release(&mutex_monitor);
+                
+                delete img;
+            }
             
             }
         }   
@@ -268,7 +298,8 @@ void Tasks::ServerTask(void *arg) {
     /* The task server starts here                                                        */
     /**************************************************************************************/
     rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-    status = monitor.Open(SERVER_PORT);
+    status = monitor.Open(SERVER_PO/home/lespiaucq/Bureau/dumber/software
+RT);
     rt_mutex_release(&mutex_monitor);
 
     cout << "Open server on port " << (SERVER_PORT) << " (" << status << ")" << endl;
@@ -335,8 +366,8 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_sem_v(&sem_startRobot);
         } else if (msgRcv->CompareID(MESSAGE_ROBOT_GO_FORWARD) ||
                 msgRcv->CompareID(MESSAGE_ROBOT_GO_BACKWARD) ||
-                msgRcv->CompareID(MESSAGE_ROBOT_GO_LEFT) ||
-                msgRcv->CompareID(MESSAGE_ROBOT_GO_RIGHT) ||
+                msgRcv->CompareI/home/lespiaucq/Bureau/dumber/software
+ID(MESSAGE_ROBOT_GO_RIGHT) ||
                 msgRcv->CompareID(MESSAGE_ROBOT_STOP)) {
 
             rt_mutex_acquire(&mutex_move, TM_INFINITE);
@@ -361,13 +392,13 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             DetectionArene = 1;
             rt_mutex_release(&mutex_detectionArene);
         } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_CONFIRM)){
-            /*rt_mutex_acquire(&mutex_confirmationArene, TM_INFINITE);
+            rt_mutex_acquire(&mutex_ConfirmationArene, TM_INFINITE);
             ConfirmationArene = 1;
-            rt_mutex_release(&mutex_confirmationArene);*/
+            rt_mutex_release(&mutex_ConfirmationArene);
         } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_INFIRM)){
-            /*rt_mutex_acquire(&mutex_confirmationArene, TM_INFINITE);
+            rt_mutex_acquire(&mutex_ConfirmationArene, TM_INFINITE);
             ConfirmationArene = 0;
-            rt_mutex_release(&mutex_confirmationArene);*/
+            rt_mutex_release(&mutex_ConfirmationArene);
         }
         delete(msgRcv); // mus be deleted manually, no consumer
     }
