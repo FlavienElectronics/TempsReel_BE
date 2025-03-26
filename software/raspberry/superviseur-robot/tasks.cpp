@@ -29,7 +29,7 @@
 #define PRIORITY_TWATCHDOG 23
 
 #define WATCHDOG_TESTING            // beaucoup de changement (RISQUÉE)
-#define RECHERCHE_ROBOT_TESTING
+#define RECHERCHE_ROBOT_TESTING     // pas mal de changement, j'ai refais une deuxième tache «CameraTask» (UN PEU RISQUÉE)
 #define MESSAGE_ACK_MONITOR_TESTING // peu de changement (PEU RISQUÉE)
 
 Camera cam;
@@ -349,6 +349,9 @@ void Tasks::Watchdog(void *arg)
 }
 #endif
 
+
+#ifdef RECHERCHE_ROBOT_TESTING
+
 void Tasks::CameraTask(void *arg)
 {
     cout << "Start " << __PRETTY_FUNCTION__ << endl
@@ -393,18 +396,118 @@ void Tasks::CameraTask(void *arg)
                 int LOCALRechercheRobot = RechercheRobot; // vrai lorsqu'on demande la recherche du robot
                 rt_mutex_release(&mutex_RechercheRobot);
 
-                #ifdef RECHERCHE_ROBOT_TESTING
+                
                 if (LOCALRechercheRobot == 1)
                 {
                     cout << "recherche robot en cours" << endl
                          << flush;
                     list<Position> liste_position = img->SearchRobot(arene);
+                    Position positionRobot;
                     if (liste_position.empty() == false)
                     {
-                        img->DrawRobot(liste_position.front());
+                        positionRobot = liste_position.front();
+                        img->DrawRobot(positionRobot);
+                    }
+                    else
+                    {
+                        positionRobot.center = cv::Point2f(-1.0,-1.0); // Position erreur
+                        img->DrawRobot(positionRobot);
+                    }
+                    cout << "Envoi de la position" << position->ToString() << endl
+                    << flush;
+                    rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+                    msgSend = monitor.Write(new Message(MESSAGE_CAM_POSITION, positionRobot));
+                    rt_mutex_release(&mutex_monitor);
+                }
+
+
+                if (LOCALdetectionarene == 1 && LOCALConfirmationArene == 0)
+                {
+                    arene = Arena(img->SearchArena());
+                    if (arene.IsEmpty() == false)
+                    {
+                        cout << "Arène detectée" << endl
+                             << flush;
+                        img->DrawArena(arene);
+                        attente_de_confirmation = 1;
+                    }
+                    else
+                    {
+                        cout << "Aucune arène trouvée" << endl
+                        << flush;
+                        rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+                        monitor.Write(new Message(MESSAGE_ANSWER_NACK, msgSend));
+                        rt_mutex_release(&mutex_monitor);
                     }
                 }
-                #endif
+                else if (LOCALConfirmationArene == 1)
+                {
+                    attente_de_confirmation = 0;
+                    img->DrawArena(arene);
+                }
+                else if (attente_de_confirmation == 1)
+                {
+                    img->DrawArena(arene);
+                }
+
+                msgSend = new MessageImg(MESSAGE_CAM_IMAGE, img);
+                rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+                WriteInQueue(&q_messageToMon, msgSend);
+                rt_mutex_release(&mutex_monitor);
+
+                delete img;
+            }
+        }
+    }
+    cout << endl
+         << flush;
+}
+
+#else
+
+void Tasks::CameraTask(void *arg)
+{
+    cout << "Start " << __PRETTY_FUNCTION__ << endl
+         << flush;
+    rt_sem_p(&sem_barrier, TM_INFINITE);
+
+    rt_task_set_periodic(NULL, TM_NOW, 100000000);
+
+    Img *img;
+
+    while (1)
+    {
+        cout << "camera coucou" << endl
+             << flush;
+        MessageImg *msgSend;
+        rt_task_wait_period(NULL);
+
+        if (cam.IsOpen())
+        {
+            cout << "Periodic Camera update" << endl;
+
+            img = new Img(cam.Grab());
+
+            // cout << img->img.size << endl;
+            if (img->img.empty())
+            {
+                cout << "Image vide " << endl;
+            }
+            else
+            {
+
+                rt_mutex_acquire(&mutex_detectionArene, TM_INFINITE);
+                int LOCALdetectionarene = DetectionArene; // vrai lorsqu'on demande la detection de l'arene
+                DetectionArene = 0;
+                rt_mutex_release(&mutex_detectionArene);
+
+                rt_mutex_acquire(&mutex_ConfirmationArene, TM_INFINITE);
+                int LOCALConfirmationArene = ConfirmationArene; // vrai lorsqu'on confirme l'arene
+                rt_mutex_release(&mutex_ConfirmationArene);
+
+                rt_mutex_acquire(&mutex_RechercheRobot, TM_INFINITE);
+                int LOCALRechercheRobot = RechercheRobot; // vrai lorsqu'on demande la recherche du robot
+                rt_mutex_release(&mutex_RechercheRobot);
 
                 if (LOCALdetectionarene == 1 && LOCALConfirmationArene == 0)
                 {
@@ -439,6 +542,8 @@ void Tasks::CameraTask(void *arg)
     cout << endl
          << flush;
 }
+
+#endif
 
 /**
  * @brief Thread handling server communication with the monitor.
