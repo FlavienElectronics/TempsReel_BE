@@ -229,7 +229,7 @@ void Tasks::CameraTask(void *arg) {
         if (cam.IsOpen())
         {
             cout << "Periodic Camera update"<< endl; 
-
+            
             img = new Img(cam.Grab());
             
             //cout << img->img.size << endl;
@@ -254,13 +254,18 @@ void Tasks::CameraTask(void *arg) {
                 if(arene.IsEmpty() == false)
                 {
                     cout << "camera pas vide" << endl <<flush;
-                    img->DrawArena(arene);  
+                    img->DrawArena(arene);
+                    attente_de_confirmation = 1;
                     
                 }
             }
             else if (LOCALConfirmationArene == 1)
             {
                 attente_de_confirmation = 0;
+                img->DrawArena(arene);
+            }
+            else if (attente_de_confirmation == 1)
+            {
                 img->DrawArena(arene);
             }
 
@@ -270,6 +275,8 @@ void Tasks::CameraTask(void *arg) {
             rt_mutex_release(&mutex_monitor);
 
             delete img;
+            
+
             
             }
         }   
