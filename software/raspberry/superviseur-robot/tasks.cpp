@@ -89,6 +89,10 @@ void Tasks::Init() {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
+        if (err = rt_mutex_create(&mutex_RechercheRobot, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
 
     cout << "Mutexes created successfully" << endl << flush;
 
@@ -247,6 +251,20 @@ void Tasks::CameraTask(void *arg) {
             int LOCALConfirmationArene = ConfirmationArene; // vrai lorsqu'on confirme l'arene
             rt_mutex_release(&mutex_ConfirmationArene);
             
+            rt_mutex_acquire(&mutex_RechercheRobot, TM_INFINITE);
+            int LOCALRechercheRobot = RechercheRobot;               // vrai lorsqu'on demande la recherche du robot
+            rt_mutex_release(&mutex_RechercheRobot);
+            
+            if (LOCALRechercheRobot == 1)
+            {
+                 cout << "recherche robot en cours" << endl <<flush;
+                 list<Position> liste_position = img->SearchRobot(arene);
+                 if (liste_position.empty() == false)
+                 {
+                     img->DrawRobot(liste_position.front());
+                 }
+            }
+            
 
             if (LOCALdetectionarene == 1 && LOCALConfirmationArene == 0)
             {
@@ -398,6 +416,18 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_ConfirmationArene, TM_INFINITE);
             ConfirmationArene = 0;
             rt_mutex_release(&mutex_ConfirmationArene);
+        }
+        else if (msgRcv->CompareID(MESSAGE_CAM_POSITION_COMPUTE_START))
+        {
+            rt_mutex_acquire(&mutex_RechercheRobot, TM_INFINITE);
+            RechercheRobot = 1;
+            rt_mutex_release(&mutex_RechercheRobot);
+        }
+        else if (msgRcv->CompareID(MESSAGE_CAM_POSITION_COMPUTE_STOP))
+        {
+            rt_mutex_acquire(&mutex_RechercheRobot, TM_INFINITE);
+            RechercheRobot = 0;
+            rt_mutex_release(&mutex_RechercheRobot);
         }
         delete(msgRcv); // mus be deleted manually, no consumer
     }

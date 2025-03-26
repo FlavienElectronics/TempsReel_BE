@@ -79,6 +79,7 @@ private:
     int CalculPosition = 0;
     int DetectionArene = 0;
     int attente_de_confirmation = 0;
+    int RechercheRobot = 0;
 
     /**********************************************************************/
     /* Tasks                                                              */
@@ -107,6 +108,7 @@ private:
     RT_MUTEX mutex_detectionArene;
     RT_MUTEX mutex_calculPosition;
     RT_MUTEX mutex_ConfirmationArene;
+    RT_MUTEX mutex_RechercheRobot;
 
     /**********************************************************************/
     /* Semaphores                                                         */
