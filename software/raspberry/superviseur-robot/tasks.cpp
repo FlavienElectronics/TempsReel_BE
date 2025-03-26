@@ -28,7 +28,9 @@
 #define PRIORITY_TCAMERA 19
 #define PRIORITY_TWATCHDOG 23
 
-#define WATCHDOG_TESTING
+#define WATCHDOG_TESTING            // beaucoup de changement (RISQUÉE)
+#define RECHERCHE_ROBOT_TESTING
+#define MESSAGE_ACK_MONITOR_TESTING // peu de changement (PEU RISQUÉE)
 
 Camera cam;
 Arena arene;
@@ -391,6 +393,7 @@ void Tasks::CameraTask(void *arg)
                 int LOCALRechercheRobot = RechercheRobot; // vrai lorsqu'on demande la recherche du robot
                 rt_mutex_release(&mutex_RechercheRobot);
 
+                #ifdef RECHERCHE_ROBOT_TESTING
                 if (LOCALRechercheRobot == 1)
                 {
                     cout << "recherche robot en cours" << endl
@@ -401,6 +404,7 @@ void Tasks::CameraTask(void *arg)
                         img->DrawRobot(liste_position.front());
                     }
                 }
+                #endif
 
                 if (LOCALdetectionarene == 1 && LOCALConfirmationArene == 0)
                 {
@@ -564,9 +568,34 @@ void Tasks::ReceiveFromMonTask(void *arg)
             monitor.Write(msg);
             rt_mutex_release(&mutex_robot);
         }
+        #ifdef MESSAGE_ACK_MONITOR_TESTING
         else if (msgRcv->CompareID(MESSAGE_CAM_OPEN))
         {
-
+            cam.Open();
+            if (cam->IsOpen() == 0) // Echec ouverture caméra
+            { 
+                cout << "Probleme camera" << endl
+                     << flush;
+                rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+                msgSend = monitor.Write(new Message(MESSAGE_ANSWER_NACK, msgSend));
+                rt_mutex_release(&mutex_monitor);
+            }
+            else    // Ouverture caméra bueno
+            { 
+                cout << "Camera ouverte avec succès" << endl
+                     << flush;
+                rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+                msgSend = monitor.Write(new Message(MESSAGE_ANSWER_ACK, msgSend));
+                rt_mutex_release(&mutex_monitor);
+            }
+        }
+        else if (msgRcv->CompareID(MESSAGE_CAM_CLOSE))
+        {
+            cam.Close();
+        }
+        #else
+        else if (msgRcv->CompareID(MESSAGE_CAM_OPEN))
+        {
             cam.Open();
         }
         else if (msgRcv->CompareID(MESSAGE_CAM_CLOSE))
@@ -574,6 +603,7 @@ void Tasks::ReceiveFromMonTask(void *arg)
 
             cam.Close();
         }
+        #endif
         else if (msgRcv->CompareID(MESSAGE_CAM_ASK_ARENA))
         {
             rt_mutex_acquire(&mutex_detectionArene, TM_INFINITE);
