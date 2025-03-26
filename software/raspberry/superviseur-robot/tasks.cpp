@@ -27,6 +27,9 @@
 #define PRIORITY_TSTARTROBOT 20
 #define PRIORITY_TCAMERA 19
 
+Camera cam;
+
+
 /*
  * Some remarks:
  * 1- This program is mostly a template. It shows you how to create tasks, semaphore
@@ -77,10 +80,6 @@ void Tasks::Init() {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    if (err = rt_mutex_create(&mutex_openCamera, NULL)) {
-        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
-        exit(EXIT_FAILURE);
-    }
 
     cout << "Mutexes created successfully" << endl << flush;
 
@@ -100,10 +99,6 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     if (err = rt_sem_create(&sem_startRobot, NULL, 0, S_FIFO)) {
-        cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
-        exit(EXIT_FAILURE);
-    }
-    if (err = rt_sem_create(&sem_cameraTask, NULL, 0, S_FIFO)) {
         cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -210,50 +205,45 @@ void Tasks::Join() {
 
 void Tasks::CameraTask(void *arg) {
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
+    // Synchronization barrier (waiting that all tasks are starting)
     rt_sem_p(&sem_barrier, TM_INFINITE);
-    
-    Img * image;
-    Camera * cam;
-    cam = new Camera(sm,10);
-    
-    Arena * arena;
-    
-    while(1){
-        
-        rt_sem_p(&sem_cameraTask, TM_INFINITE);
-        
-        cout << "Sem OK" << endl << flush;
-        
-        rt_mutex_acquire(&mutex_openCamera, TM_INFINITE);
-        int openCameraLocal = openCamera;
-        rt_mutex_release(&mutex_openCamera);
-                
-        cout << "Tache libérée" << endl << flush;
-                        
-        if (openCameraLocal == 1){
-            if (cam->IsOpen() == false){
-                cam->Open();
-                cout << "CAMERA OUVERTE" << endl << flush;
-            }
-            
-            image = new Img(cam->Grab());
-            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-            monitor.Write(new MessageImg(MESSAGE_CAM_IMAGE, image));
-            rt_mutex_release(&mutex_monitor);
+   
+    /**************************************************************************************/
+    /* The task starts here                                                               */
+    /**************************************************************************************/
+    rt_task_set_periodic(NULL, TM_NOW, 100000000);
 
-            delete image;            
+    while (1) {
+        //Img * img;
+        MessageImg * msgSend;
+        rt_task_wait_period(NULL);
+        if (cam.IsOpen()){
+            cout << "Periodic Camera update"<< endl;
+         
+            //Creating the message
+           
+            Img * img = new Img(cam.Grab());
+           
+            cout << img->img.size << endl;
+            //img = new Img(came.Grab().Resize());
+            if (img->img.empty()){
+                cout << "Frame vide "<< endl;
+            }else{
             
-        }else{
-            if (cam->IsOpen() == true){
-                cam->Close();
-                cout << "CAMERA FERMEE" << endl << flush;
+            msgSend = new MessageImg(MESSAGE_CAM_IMAGE,img);
+
+            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+            WriteInQueue(&q_messageToMon, msgSend);
+            rt_mutex_release(&mutex_monitor);
             }
         }
-        
-        rt_task_sleep(10000000);
-        
+        else{
+            cout << "Camera not Opened" << endl << flush ;
+           
+        }
+ 
     }
-    delete cam;
+        cout << endl << flush;
 }
 
 /**
@@ -352,19 +342,11 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_release(&mutex_robot);
         } else if (msgRcv->CompareID(MESSAGE_CAM_OPEN)){
             
-            rt_mutex_acquire(&mutex_openCamera, TM_INFINITE);
-            openCamera = 1;
-            rt_mutex_release(&mutex_openCamera);
-            
-            rt_sem_v(&sem_cameraTask);
+            cam.Open();
             
         } else if (msgRcv->CompareID(MESSAGE_CAM_CLOSE)){
             
-            rt_mutex_acquire(&mutex_openCamera, TM_INFINITE);
-            openCamera = 0;
-            rt_mutex_release(&mutex_openCamera);
-            
-            rt_sem_p(&sem_cameraTask, TM_INFINITE);
+            cam.Close();
             
         } else if (msgRcv->CompareID(MESSAGE_CAM_ASK_ARENA)){
             /*rt_mutex_acquire(&mutex_demandeRechercheArene, TM_INFINITE);
