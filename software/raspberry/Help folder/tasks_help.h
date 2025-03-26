@@ -36,7 +36,8 @@
 
 using namespace std;
 
-class Tasks {
+class Tasks
+{
 public:
     /**
      * @brief Initializes main structures (semaphores, tasks, mutex, etc.)
@@ -52,12 +53,12 @@ public:
      * @brief Stops tasks
      */
     void Stop();
-    
+
     /**
      * @brief Suspends main thread
      */
     void Join();
-    
+
 private:
     /**********************************************************************/
     /* Shared data                                                        */
@@ -66,11 +67,11 @@ private:
     ComRobot robot;
     int robotStarted;
     int move = MESSAGE_ROBOT_STOP;
-    int withWd = 0; //variable equals 0 if start without watchdog, 1 otherwise
-    int findPosition=0; // variable =0 for stop find position 
-    int openCam=0; //variable=1 if we open the camera, 0 otherwise
-    int findArena=0;
-    int arenaOk=0;
+    int withWd = 0;       // variable equals 0 if start without watchdog, 1 otherwise
+    int findPosition = 0; // variable =0 for stop find position
+    int openCam = 0;      // variable=1 if we open the camera, 0 otherwise
+    int findArena = 0;
+    int arenaOk = 0;
     /**********************************************************************/
     /* Tasks                                                              */
     /**********************************************************************/
@@ -80,7 +81,7 @@ private:
     RT_TASK th_openComRobot;
     RT_TASK th_startRobot;
     RT_TASK th_move;
-    RT_TASK th_checkBattery; 
+    RT_TASK th_checkBattery;
     RT_TASK th_reloadWd;
     RT_TASK th_lostComRS;
     RT_TASK th_vision;
@@ -93,9 +94,9 @@ private:
     RT_MUTEX mutex_move;
     RT_MUTEX mutex_withWd;
     RT_MUTEX mutex_findPosition;
-    RT_MUTEX mutex_openCam; 
-    RT_MUTEX mutex_findArena; 
-    RT_MUTEX mutex_arenaOk; 
+    RT_MUTEX mutex_openCam;
+    RT_MUTEX mutex_findArena;
+    RT_MUTEX mutex_arenaOk;
     /**********************************************************************/
     /* Semaphores                                                         */
     /**********************************************************************/
@@ -111,7 +112,7 @@ private:
     int MSG_QUEUE_SIZE;
     RT_QUEUE q_messageToMon;
     RT_QUEUE q_messageToRobot;
-    
+
     /**********************************************************************/
     /* Tasks' functions                                                   */
     /**********************************************************************/
@@ -119,17 +120,17 @@ private:
      * @brief Thread handling server communication with the monitor.
      */
     void ServerTask(void *arg);
-     
+
     /**
      * @brief Thread sending data to monitor.
      */
     void SendToMonTask(void *arg);
-        
+
     /**
      * @brief Thread receiving data from monitor.
      */
     void ReceiveFromMonTask(void *arg);
-    
+
     /**
      * @brief Thread opening communication with the robot.
      */
@@ -139,33 +140,32 @@ private:
      * @brief Thread starting the communication with the robot.
      */
     void StartRobotTask(void *arg);
-    
+
     /**
      * @brief Thread handling control of the robot.
      */
     void MoveTask(void *arg);
-    
-     /**
+
+    /**
      * @brief Thread that checks battery level
      */
     void CheckBatteryTask(void *arg);
-    
-     /**
+
+    /**
      * @brief Thread that reload the Wd on the robot
      */
     void ReloadWdTask(void *arg);
-    
+
     /**
      * @brief Thread that detect the lost of communication with the robot
      */
     void LostComRSTask(void *arg);
-    
-     /**
+
+    /**
      * @brief Thread starting communication with Camera, calibrating arena and finding position
      */
     void VisionTask(void *arg);
-    
-    
+
     /**********************************************************************/
     /* Queue services                                                     */
     /**********************************************************************/
@@ -175,15 +175,13 @@ private:
      * @param msg Message to be stored
      */
     void WriteInQueue(RT_QUEUE *queue, Message *msg);
-    
+
     /**
      * Read a message from a given queue, block if empty
      * @param queue Queue identifier
      * @return Message read
      */
     Message *ReadInQueue(RT_QUEUE *queue);
-
 };
 
-#endif // __TASKS_H__ 
-
+#endif // __TASKS_H__

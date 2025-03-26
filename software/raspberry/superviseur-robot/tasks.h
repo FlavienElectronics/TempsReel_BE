@@ -80,6 +80,7 @@ private:
     int DetectionArene = 0;
     int attente_de_confirmation = 0;
     int RechercheRobot = 0;
+    int DemarageAvecWatchdog = 0;
 
     /**********************************************************************/
     /* Tasks                                                              */
@@ -92,6 +93,7 @@ private:
     RT_TASK th_move;
     RT_TASK th_camera;
     RT_TASK th_position;
+    RT_TASK th_watchdogTask;
 
     /**********************************************************************/
     /* Mutex                                                              */
@@ -109,6 +111,7 @@ private:
     RT_MUTEX mutex_calculPosition;
     RT_MUTEX mutex_ConfirmationArene;
     RT_MUTEX mutex_RechercheRobot;
+    RT_MUTEX mutex_DemarageAvecWatchdog;
 
     /**********************************************************************/
     /* Semaphores                                                         */
@@ -117,6 +120,7 @@ private:
     RT_SEM sem_openComRobot;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
+    RT_SEM sem_DemarageWatchdog;
 
     /**********************************************************************/
     /* Message queues                                                     */
@@ -131,6 +135,9 @@ private:
     void CameraTask(void *arg);
 
     void PositionTask(void *arg);
+
+    void Watchdog(void *arg);
+    
 
     /**
      * @brief Thread handling server communication with the monitor.
