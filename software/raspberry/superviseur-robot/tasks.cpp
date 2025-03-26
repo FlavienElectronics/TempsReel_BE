@@ -293,9 +293,7 @@ void Tasks::CameraTask(void *arg) {
             rt_mutex_release(&mutex_monitor);
 
             delete img;
-            
-
-            
+                        
             }
         }   
  
