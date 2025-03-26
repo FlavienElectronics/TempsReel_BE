@@ -67,11 +67,7 @@ private:
     int robotStarted = 0;
     int move = MESSAGE_ROBOT_STOP;
     
-    int CameraActivated = 0;
-    int DemandeRechercheArene = 0;
-    int AttenteConfirmationArene = 0;
-    int ConfirmationArene = -1;
-    int CalculPosition = 0;
+    int openCamera = 0;
     
     /**********************************************************************/
     /* Tasks                                                              */
@@ -92,11 +88,7 @@ private:
     RT_MUTEX mutex_robotStarted;
     RT_MUTEX mutex_move;
     RT_MUTEX mutex_battery;
-    RT_MUTEX mutex_getCameraEtat;
-    RT_MUTEX mutex_demandeRechercheArene;
-    RT_MUTEX mutex_attenteConfirmationArene;
-    RT_MUTEX mutex_confirmationArene;
-    RT_MUTEX mutex_calculPosition;
+    RT_MUTEX mutex_openCamera;
 
     /**********************************************************************/
     /* Semaphores                                                         */
@@ -105,6 +97,7 @@ private:
     RT_SEM sem_openComRobot;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
+    RT_SEM sem_cameraTask;
 
     /**********************************************************************/
     /* Message queues                                                     */
