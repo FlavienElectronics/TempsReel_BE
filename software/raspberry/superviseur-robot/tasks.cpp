@@ -703,16 +703,19 @@ void Tasks::ReceiveFromMonTask(void *arg)
             { 
                 cout << "Probleme camera" << endl
                      << flush;
+
+                Message * msgSend_INFORMATION = new Message(MESSAGE_ANSWER_NACK);
                 rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-                msgSend = monitor.Write(new Message(MESSAGE_ANSWER_NACK, msgSend));
+                WriteInQueue(&q_messageToMon, msgSend_INFORMATION);
                 rt_mutex_release(&mutex_monitor);
             }
             else    // Ouverture caméra bueno
             { 
                 cout << "Camera ouverte avec succès" << endl
                      << flush;
+                Message * msgSend_INFORMATION = new Message(MESSAGE_ANSWER_ACK);
                 rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
-                msgSend = monitor.Write(new Message(MESSAGE_ANSWER_ACK, msgSend));
+                WriteInQueue(&q_messageToMon, msgSend_INFORMATION);
                 rt_mutex_release(&mutex_monitor);
             }
         }
