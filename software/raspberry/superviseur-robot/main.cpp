@@ -45,4 +45,10 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+// cd ~/Bureau/TempsReel_BE/software/monitor/monitor-python-qt
 // python monitor-python.py 10.105.0.136 5544
+// ssh xenomai@10.105.0.136
+// xenomai
+
+// cd ~/.netbeans/remote/10.105.0.136/insa-11290-Linux-x86_64/home/lespiaucq/Bureau/TempsReel_BE/software/raspberry/superviseur-robot/dist/Debug__RPI_/GNU-Linux
+// sudo ./superviseur-rob
