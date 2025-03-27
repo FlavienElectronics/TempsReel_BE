@@ -73,12 +73,13 @@ private:
     int move = MESSAGE_ROBOT_STOP;
 
     int CameraActivated = 0;
-    int DemandeRechercheArene = 0;
-    int AttenteConfirmationArene = 0;
-    int ConfirmationArene = -1;
+    
+    int DemandeRechercheArene = 0;      // 0 : pas de demande de recherche d'arène & 1 : demande de recherche d'arène
+    int AttenteConfirmationArene = 0;   // 1 : attente d'une réponse sur la confirmation de l'arène
+    int ConfirmationArene = -1;         // -1 : Arène non confirmée & 0 : refus de l'arène & 1 : acceptation de l'arène
+    int DetectionArene = 0;             // 0 : Arène confirmé (utile si on garde ConfirmationArene à 1 ?)
+    
     int CalculPosition = 0;
-    int DetectionArene = 0;
-    int attente_de_confirmation = 0;
     int RechercheRobot = 0;
     int DemarageAvecWatchdog = 0;
 
@@ -127,6 +128,7 @@ private:
     /**********************************************************************/
     int MSG_QUEUE_SIZE;
     RT_QUEUE q_messageToMon;
+    RT_QUEUE q_messageToRobot;
 
     /**********************************************************************/
     /* Tasks' functions                                                   */
