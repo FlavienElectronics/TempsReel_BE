@@ -324,6 +324,8 @@ void Tasks::Watchdog(void *arg)
 }
 #endif
 
+// Commentaire bidon
+
 void Tasks::CameraTask(void *arg)
 {
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
