@@ -26,29 +26,22 @@
 #include "tasks.h"
 #endif // __WITH_PTHREAD__
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     Tasks tasks;
-    
-    //Lock the memory to avoid memory swapping for this program
+
+    // Lock the memory to avoid memory swapping for this program
     mlockall(MCL_CURRENT | MCL_FUTURE);
 
-    cout<<"#################################"<<endl;
-    cout<<"#      DE  PROJECT  X           #"<<endl;
-    cout<<"#################################"<<endl;
-    
+    cout << "######################################################" << endl;
+    cout << "#    PROJECT   OVERCHARGED   LESPIAUCQ X CARVALHO    #" << endl;
+    cout << "######################################################" << endl;
+
     tasks.Init();
     tasks.Run();
     tasks.Join();
-    
+
     tasks.Stop();
-    
+
     return 0;
 }
-
-// cd ~/Bureau/TempsReel_BE/software/monitor/monitor-python-qt
-// python monitor-python.py 10.105.0.136 5544
-// ssh xenomai@10.105.0.136
-// xenomai
-
-// cd ~/.netbeans/remote/10.105.0.136/insa-11290-Linux-x86_64/home/lespiaucq/Bureau/TempsReel_BE/software/raspberry/superviseur-robot/dist/Debug__RPI_/GNU-Linux
-// sudo ./superviseur-rob

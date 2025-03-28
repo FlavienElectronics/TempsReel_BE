@@ -65,24 +65,13 @@ private:
     /**********************************************************************/
     ComMonitor monitor;
     ComRobot robot;
-    
-    Img *image;
-    Arena *arena;
-
-    int robotStarted = 0;
+    int robotStarted;
     int move = MESSAGE_ROBOT_STOP;
-
-    int CameraActivated = 0;
-    
-    int DemandeRechercheArene = 0;      // 0 : pas de demande de recherche d'arène & 1 : demande de recherche d'arène
-    int AttenteConfirmationArene = 0;   // 1 : attente d'une réponse sur la confirmation de l'arène
-    int ConfirmationArene = -1;         // -1 : Arène non confirmée & 0 : refus de l'arène & 1 : acceptation de l'arène
-    int DetectionArene = 0;             // 0 : Arène confirmé (utile si on garde ConfirmationArene à 1 ?)
-    
-    int CalculPosition = 0;
-    int RechercheRobot = 0;
-    int DemarageAvecWatchdog = 0;
-
+    int withWd = 0;       // variable equals 0 if start without watchdog, 1 otherwise
+    int findPosition = 0; // variable =0 for stop find position
+    int openCam = 0;      // variable=1 if we open the camera, 0 otherwise
+    int findArena = 0;
+    int arenaOk = 0;
     /**********************************************************************/
     /* Tasks                                                              */
     /**********************************************************************/
@@ -92,10 +81,10 @@ private:
     RT_TASK th_openComRobot;
     RT_TASK th_startRobot;
     RT_TASK th_move;
-    RT_TASK th_camera;
-    RT_TASK th_position;
-    RT_TASK th_watchdogTask;
-
+    RT_TASK th_checkBattery;
+    RT_TASK th_reloadWd;
+    RT_TASK th_lostComRS;
+    RT_TASK th_vision;
     /**********************************************************************/
     /* Mutex                                                              */
     /**********************************************************************/
@@ -103,17 +92,11 @@ private:
     RT_MUTEX mutex_robot;
     RT_MUTEX mutex_robotStarted;
     RT_MUTEX mutex_move;
-    RT_MUTEX mutex_battery;
-    RT_MUTEX mutex_getCameraEtat;
-    RT_MUTEX mutex_demandeRechercheArene;
-    RT_MUTEX mutex_attenteConfirmationArene;
-    RT_MUTEX mutex_confirmationArene;
-    RT_MUTEX mutex_detectionArene;
-    RT_MUTEX mutex_calculPosition;
-    RT_MUTEX mutex_ConfirmationArene;
-    RT_MUTEX mutex_RechercheRobot;
-    RT_MUTEX mutex_DemarageAvecWatchdog;
-
+    RT_MUTEX mutex_withWd;
+    RT_MUTEX mutex_findPosition;
+    RT_MUTEX mutex_openCam;
+    RT_MUTEX mutex_findArena;
+    RT_MUTEX mutex_arenaOk;
     /**********************************************************************/
     /* Semaphores                                                         */
     /**********************************************************************/
@@ -121,8 +104,8 @@ private:
     RT_SEM sem_openComRobot;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
-    RT_SEM sem_DemarageWatchdog;
-
+    RT_SEM sem_startReloadWd;
+    RT_SEM sem_vision;
     /**********************************************************************/
     /* Message queues                                                     */
     /**********************************************************************/
@@ -133,14 +116,6 @@ private:
     /**********************************************************************/
     /* Tasks' functions                                                   */
     /**********************************************************************/
-
-    void CameraTask(void *arg);
-
-    void PositionTask(void *arg);
-
-    void Watchdog(void *arg);
-    
-
     /**
      * @brief Thread handling server communication with the monitor.
      */
@@ -170,6 +145,26 @@ private:
      * @brief Thread handling control of the robot.
      */
     void MoveTask(void *arg);
+
+    /**
+     * @brief Thread that checks battery level
+     */
+    void CheckBatteryTask(void *arg);
+
+    /**
+     * @brief Thread that reload the Wd on the robot
+     */
+    void ReloadWdTask(void *arg);
+
+    /**
+     * @brief Thread that detect the lost of communication with the robot
+     */
+    void LostComRSTask(void *arg);
+
+    /**
+     * @brief Thread starting communication with Camera, calibrating arena and finding position
+     */
+    void VisionTask(void *arg);
 
     /**********************************************************************/
     /* Queue services                                                     */
