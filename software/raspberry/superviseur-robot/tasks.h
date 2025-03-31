@@ -95,6 +95,7 @@ private:
     RT_TASK th_camera;
     RT_TASK th_position;
     RT_TASK th_watchdogTask;
+    RT_TASK th_recherchearene;
 
     /**********************************************************************/
     /* Mutex                                                              */
@@ -122,6 +123,7 @@ private:
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
     RT_SEM sem_DemarageWatchdog;
+    RT_SEM sem_RechercheArene;
 
     /**********************************************************************/
     /* Message queues                                                     */
@@ -135,6 +137,7 @@ private:
     /**********************************************************************/
 
     void CameraTask(void *arg);
+    void RechercheArene(void *args);
 
     void PositionTask(void *arg);
 
