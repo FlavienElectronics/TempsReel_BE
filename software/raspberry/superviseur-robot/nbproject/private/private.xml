@@ -9,9 +9,10 @@
         <group>
             <file>file:/home/lespiaucq/Bureau/TempsReel_BE/software/raspberry/superviseur-robot/main.cpp</file>
             <file>file:/home/lespiaucq/Bureau/TempsReel_BE/software/raspberry/superviseur-robot/tasks.cpp</file>
+            <file>file:/home/lespiaucq/Bureau/TempsReel_BE/software/raspberry/superviseur-robot/lib/commonitor.cpp</file>
             <file>file:/home/lespiaucq/Bureau/TempsReel_BE/software/raspberry/superviseur-robot/lib/messages.h</file>
             <file>file:/home/lespiaucq/Bureau/TempsReel_BE/software/raspberry/superviseur-robot/lib/messages.cpp</file>
-            <file>file:/home/lespiaucq/Bureau/TempsReel_BE/software/raspberry/superviseur-robot/lib/img.cpp</file>
+            <file>file:/home/lespiaucq/Bureau/TempsReel_BE/software/raspberry/superviseur-robot/lib/commonitor.h</file>
             <file>file:/home/lespiaucq/Bureau/TempsReel_BE/software/raspberry/superviseur-robot/tasks.h</file>
         </group>
     </open-files>

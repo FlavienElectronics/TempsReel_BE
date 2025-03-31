@@ -18,6 +18,10 @@
 #include "tasks.h"
 #include <stdexcept>
 
+#include <iostream>
+#include <cstdlib>
+#include <unistd.h>
+
 // Déclaration des priorités des taches
 #define PRIORITY_TSERVER 30
 #define PRIORITY_TOPENCOMROBOT 20
@@ -316,6 +320,8 @@ void Tasks::Watchdog(void *arg)
     rt_sem_p(&sem_DemarageWatchdog, TM_INFINITE);
 
     rt_task_set_periodic(NULL, TM_NOW, 1000000000);
+    
+    int failedAttempts = 0;
 
     while (1)
     {
@@ -329,10 +335,25 @@ void Tasks::Watchdog(void *arg)
             message = robot.Write(new Message(MESSAGE_ROBOT_RELOAD_WD));
             rt_mutex_release(&mutex_robot);
                         
-            // VERIFIER QUE CETTE LIGNE EST BIEN UTILE !
-            rt_mutex_acquire(&mutex_robot, TM_INFINITE);
-            WriteInQueue(&q_messageToRobot, message); // to verify if we lost connectivity
-            rt_mutex_release(&mutex_robot);
+            if (message == NULL)
+            {
+                // Si l'écriture échoue
+                failedAttempts++;
+                if (failedAttempts >= 3)  // Seuil de 3 échecs consécutifs
+                {
+                    // Gérer la perte de connexion
+                    cout << "Perte de connexion avec le robot !" << endl;
+                    // Effectuer une action comme arrêter le robot ou réinitialiser la connexion
+                }
+            }
+            else
+            {
+                // Si la communication réussit, réinitialiser le compteur d'échecs
+                failedAttempts = 0;
+                rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+                WriteInQueue(&q_messageToRobot, message);  // Pour vérifier la queue
+                rt_mutex_release(&mutex_robot);
+            }
         }
     }
     delete (message);
@@ -480,7 +501,6 @@ void Tasks::CameraTask(void *arg)
                 int LOCALRechercheRobot = RechercheRobot; // vrai lorsqu'on demande la recherche du robot
                 rt_mutex_release(&mutex_RechercheRobot);
 
-                
                 if (LOCALAttenteConfirmationArene == 0){
                     
                     if (arene.IsEmpty() == false && LOCALdetectionarene == 1)
@@ -582,6 +602,20 @@ void Tasks::SendToMonTask(void *arg)
     }
 }
 
+void reload_program() {
+    const char *program = "./superviseur-robot";  // Nom de votre programme
+    char *const args[] = {const_cast<char*>(program), nullptr};
+    
+    usleep(1000);
+    
+    execvp(program, args);
+    
+    // Si execvp échoue, on peut afficher un message d'erreur
+    std::cerr << "Erreur lors du redémarrage du programme." << std::endl;
+    exit(-1);
+}
+
+
 /**
  * @brief Thread receiving data from monitor.
  */
@@ -608,7 +642,45 @@ void Tasks::ReceiveFromMonTask(void *arg)
         if (msgRcv->CompareID(MESSAGE_MONITOR_LOST))
         {
             delete (msgRcv);
-            exit(-1);
+            
+            //rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+            //monitor.Close();
+            //rt_mutex_release(&mutex_monitor);
+            
+            //reload_program();
+                        
+            
+            cout << "Connection lost with monitor, performing cleanup..." << endl << flush;
+    
+            // Arrêter le robot
+            rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+            Message *msgStopRobot = robot.Write(new Message(MESSAGE_ROBOT_STOP));
+            rt_mutex_release(&mutex_robot);
+            cout << "Robot stopped." << endl << flush;
+
+            // Fermer le serveur & robot
+            rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
+            monitor.Close();
+            rt_mutex_release(&mutex_monitor);
+            rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+            robot.Close();
+            rt_mutex_release(&mutex_robot);
+            cout << "Server & robot SOCKET closed." << endl << flush;
+
+            // Déconnecter la caméra
+            cam.Close();  // Ferme la caméra
+            cout << "Camera disconnected." << endl << flush;
+
+            // Revenir à l'état initial
+            // Réinitialiser des variables ou préparer le système pour un redémarrage
+            rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
+            robotStarted = 0;  // Réinitialiser l'état du robot
+            rt_mutex_release(&mutex_robotStarted);
+            cout << "System reset to initial state." << endl << flush;
+            
+            reload_program();
+            
+            //exit(-1);
         }
         else if (msgRcv->CompareID(MESSAGE_ROBOT_COM_OPEN))
         {
