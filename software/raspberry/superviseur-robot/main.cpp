@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     mlockall(MCL_CURRENT | MCL_FUTURE);
 
     cout << "######################################################" << endl;
-    cout << "#    PROJECT   OVERCHARGED   LESPIAUCQ X CARVALHO    #" << endl;
+    cout << "#    PROJECT 2  OVERCHARGED   LESPIAUCQ X CARVALHO    #" << endl;
     cout << "######################################################" << endl;
 
     tasks.Init();
