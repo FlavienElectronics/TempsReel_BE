@@ -66,22 +66,22 @@ private:
     ComMonitor monitor;
     ComRobot robot;
     
-    Img *image;
-    Arena *arena;
+    Img *image;                         // Pointeur global pour l'image
+    Arena *arena;                       // Pointeur global pour stocker l'arène 
 
-    int robotStarted = 0;
-    int move = MESSAGE_ROBOT_STOP;
+    int robotStarted = 0;               // Etat du robot (0 : arrêté & 1 : démarra)
+    int move = MESSAGE_ROBOT_STOP;      // Message d'arrêt du robot
 
-    int CameraActivated = 0;
+    int CameraActivated = 0;            // Etat d'activation de la caméra (0 : arrêtée & 1 : activée)
     
     int DemandeRechercheArene = 0;      // 0 : pas de demande de recherche d'arène & 1 : demande de recherche d'arène
     int AttenteConfirmationArene = 0;   // 1 : attente d'une réponse sur la confirmation de l'arène
     int ConfirmationArene = -1;         // -1 : Arène non confirmée & 0 : refus de l'arène & 1 : acceptation de l'arène
     int DetectionArene = 0;             // 0 : Arène confirmé (utile si on garde ConfirmationArene à 1 ?)
     
-    int CalculPosition = 0;
-    int RechercheRobot = 0;
-    int DemarageAvecWatchdog = 0;
+    int CalculPosition = 0;             // 0 : Pas de calcul de position du robot & 1 : Calcul activé
+    int RechercheRobot = 0;             // 0 : Pas de recherche de position du robot & 1 : Recherche activée
+    int DemarageAvecWatchdog = 0;       // 0 : Pas de démarrage avec WatchDog & 1 : Démarrage avec WatchDog activé
 
     /**********************************************************************/
     /* Tasks                                                              */
@@ -129,8 +129,8 @@ private:
     /* Message queues                                                     */
     /**********************************************************************/
     int MSG_QUEUE_SIZE;
-    RT_QUEUE q_messageToMon;
-    RT_QUEUE q_messageToRobot;
+    RT_QUEUE q_messageToMon;            // Queue vers moniteur
+    RT_QUEUE q_messageToRobot;          // Queue vers robot
 
     /**********************************************************************/
     /* Tasks' functions                                                   */
